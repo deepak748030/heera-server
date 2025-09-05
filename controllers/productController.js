@@ -2,6 +2,72 @@ const Product = require('../models/Product');
 const Category = require('../models/Category');
 const { validationResult } = require('express-validator');
 
+
+/**
+ * Create new product
+ * POST /api/products
+ */
+const createProduct = async (req, res, next) => {
+  try {
+    const {
+      name,
+      price,
+      originalPrice,
+      category,
+      store,
+      unit,
+      inStock,
+      stockCount,
+      isOrganic,
+      freshness,
+      description,
+      isFlashSale
+    } = req.body;
+
+    // Validate required fields
+    if (!name || !price || !category) {
+      return res.status(400).json({
+        success: false,
+        message: 'Name, price, category, and store are required'
+      });
+    }
+
+    // Handle images (uploaded via multer)
+    let images = [];
+    if (req.files && req.files.length > 0) {
+      images = req.files.map(file => `/uploads/products/${file.filename}`);
+    }
+
+    const product = new Product({
+      name,
+      price,
+      originalPrice,
+      images,
+      category,
+      store,
+      unit,
+      inStock,
+      stockCount,
+      isOrganic,
+      freshness,
+      description,
+      isFlashSale
+    });
+
+    await product.save();
+
+    res.status(201).json({
+      success: true,
+      message: 'Product created successfully',
+      product
+    });
+
+  } catch (error) {
+    next(error);
+  }
+};
+
+
 /**
  * Get all products with filtering and pagination
  * GET /api/products
@@ -87,7 +153,7 @@ const getProducts = async (req, res, next) => {
     // Execute query
     const products = await Product.find(filter)
       .populate('category', 'name icon color')
-      .populate('store', 'name location verified rating')
+      // .populate('store', 'name location verified rating')
       .select('-__v')
       .sort(sort)
       .skip(skip)
@@ -123,7 +189,7 @@ const getProduct = async (req, res, next) => {
 
     const product = await Product.findById(id)
       .populate('category', 'name icon color description')
-      .populate('store', 'name location phone verified farmCertified rating yearsInBusiness description');
+    // .populate('store', 'name location phone verified farmCertified rating yearsInBusiness description');
 
     if (!product) {
       return res.status(404).json({
@@ -169,10 +235,10 @@ const getFeaturedProducts = async (req, res, next) => {
         { totalSold: { $gte: 100 } }
       ]
     })
-    .populate('category', 'name icon color')
-    .populate('store', 'name location verified')
-    .sort({ rating: -1, totalSold: -1 })
-    .limit(parseInt(limit, 10));
+      .populate('category', 'name icon color')
+      // .populate('store', 'name location verified')
+      .sort({ rating: -1, totalSold: -1 })
+      .limit(parseInt(limit, 10));
 
     res.status(200).json({
       success: true,
@@ -198,10 +264,10 @@ const getFlashSaleProducts = async (req, res, next) => {
       inStock: true,
       isFlashSale: true
     })
-    .populate('category', 'name icon color')
-    .populate('store', 'name location verified')
-    .sort({ createdAt: -1 })
-    .limit(parseInt(limit, 10));
+      .populate('category', 'name icon color')
+      // .populate('store', 'name location verified')
+      .sort({ createdAt: -1 })
+      .limit(parseInt(limit, 10));
 
     res.status(200).json({
       success: true,
@@ -245,10 +311,10 @@ const getProductsByCategory = async (req, res, next) => {
       isActive: true,
       inStock: true
     })
-    .populate('store', 'name location verified')
-    .sort(sort)
-    .skip(skip)
-    .limit(limitNum);
+      .populate('store', 'name location verified')
+      .sort(sort)
+      .skip(skip)
+      .limit(limitNum);
 
     const total = await Product.countDocuments({
       category: categoryId,
@@ -297,11 +363,11 @@ const searchProducts = async (req, res, next) => {
         { description: searchRegex }
       ]
     })
-    .populate('category', 'name icon color')
-    .populate('store', 'name location verified')
-    .sort({ rating: -1, totalSold: -1 })
-    .skip(skip)
-    .limit(limitNum);
+      .populate('category', 'name icon color')
+      // .populate('store', 'name location verified')
+      .sort({ rating: -1, totalSold: -1 })
+      .skip(skip)
+      .limit(limitNum);
 
     const total = await Product.countDocuments({
       isActive: true,
@@ -330,5 +396,6 @@ module.exports = {
   getFeaturedProducts,
   getFlashSaleProducts,
   getProductsByCategory,
-  searchProducts
+  searchProducts,
+  createProduct
 };

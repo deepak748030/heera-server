@@ -45,8 +45,9 @@ const productSchema = new mongoose.Schema({
   store: {
     type: mongoose.Schema.ObjectId,
     ref: 'Store',
-    required: [true, 'Store is required'],
-    index: true
+    // required: [true, 'Store is required'],
+    // index: true,
+    default: null
   },
   unit: {
     type: String,
@@ -106,7 +107,7 @@ productSchema.index({ name: 1 });
 productSchema.index({ createdAt: -1 });
 
 // Calculate discount percentage
-productSchema.virtual('discountPercentage').get(function() {
+productSchema.virtual('discountPercentage').get(function () {
   if (this.originalPrice && this.originalPrice > this.price) {
     return Math.round(((this.originalPrice - this.price) / this.originalPrice) * 100);
   }
