@@ -83,7 +83,7 @@ const orderSchema = new mongoose.Schema({
   items: {
     type: [orderItemSchema],
     validate: {
-      validator: function(items) {
+      validator: function (items) {
         return items && items.length > 0;
       },
       message: 'Order must have at least one item'
@@ -142,11 +142,11 @@ const orderSchema = new mongoose.Schema({
   actualDelivery: {
     type: Date
   },
-  store: {
-    name: String,
-    phone: String,
-    location: String
-  },
+  // store: {
+  //   name: String,
+  //   phone: String,
+  //   location: String,
+  // },
   paymentMethod: {
     type: String,
     enum: ['cod', 'upi', 'card', 'wallet', 'netbanking'],
@@ -197,7 +197,7 @@ orderSchema.index({ status: 1, createdAt: -1 });
 orderSchema.index({ orderNumber: 1 });
 
 // Generate order number before saving
-orderSchema.pre('save', async function(next) {
+orderSchema.pre('save', async function (next) {
   try {
     if (this.isNew) {
       // Use a more robust order number generation
@@ -211,7 +211,7 @@ orderSchema.pre('save', async function(next) {
 });
 
 // Calculate final amount before saving
-orderSchema.pre('save', function(next) {
+orderSchema.pre('save', function (next) {
   if (this.isModified('totalAmount') || this.isModified('deliveryFee') || this.isModified('discount') || this.isNew) {
     this.finalAmount = this.totalAmount + this.deliveryFee - this.discount;
   }

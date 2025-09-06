@@ -399,3 +399,4 @@ module.exports = {
   searchProducts,
   createProduct
 };
+

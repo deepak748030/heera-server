@@ -52,7 +52,7 @@ const createOrder = async (req, res, next) => {
 
     for (const item of items) {
       const product = await Product.findById(item.productId)
-        .populate('store', 'name phone location');
+      // .populate('store', 'name phone location');
 
       if (!product || !product.isActive || !product.inStock) {
         return res.status(400).json({
@@ -73,9 +73,9 @@ const createOrder = async (req, res, next) => {
 
       // Update store info if available
       if (product.store) {
-        storeInfo.name = product.store.name || storeInfo.name;
-        storeInfo.phone = product.store.phone || storeInfo.phone;
-        storeInfo.location = product.store.location || storeInfo.location;
+        // storeInfo.name = product.store.name || storeInfo.name;
+        // storeInfo.phone = product.store.phone || storeInfo.phone;
+        // storeInfo.location = product.store.location || storeInfo.location;
       }
 
       orderItems.push({
@@ -111,7 +111,7 @@ const createOrder = async (req, res, next) => {
         state: deliveryAddress.state,
         pincode: deliveryAddress.pincode
       },
-      store: storeInfo,
+      // store: storeInfo,
       paymentMethod,
       promoCode,
       specialInstructions,
@@ -178,7 +178,8 @@ const createOrder = async (req, res, next) => {
 
     // Populate the order before sending response
     const populatedOrder = await Order.findById(order._id)
-      .populate('items.productId', 'name images category store');
+      .populate('items.productId', 'name images category');
+    // .populate('items.productId', 'name images category store');
 
     res.status(201).json({
       success: true,
@@ -201,7 +202,7 @@ const getOrders = async (req, res, next) => {
     const userId = req.user.id;
 
     const filter = { userId };
-    
+
     if (status) {
       if (status === 'active') {
         filter.status = { $in: ['pending', 'confirmed', 'preparing', 'out_for_delivery'] };
@@ -248,7 +249,8 @@ const getOrder = async (req, res, next) => {
     const userId = req.user.id;
 
     const order = await Order.findOne({ _id: id, userId })
-      .populate('items.productId', 'name images category store');
+      .populate('items.productId', 'name images category');
+    //  .populate('items.productId', 'name images category store');
 
     if (!order) {
       return res.status(404).json({
@@ -296,7 +298,7 @@ const cancelOrder = async (req, res, next) => {
     order.status = 'cancelled';
     order.canCancel = false;
     order.canReorder = true;
-    
+
     // Add tracking step
     order.orderTracking.push({
       status: 'Order Cancelled',
