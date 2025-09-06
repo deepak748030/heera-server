@@ -430,7 +430,7 @@ const reorderOrder = async (req, res, next) => {
       discount: 0,
       finalAmount,
       deliveryAddress: originalOrder.deliveryAddress,
-      store: originalOrder.store,
+      // store: originalOrder.store,
       paymentMethod: originalOrder.paymentMethod,
       estimatedDelivery: new Date(Date.now() + 24 * 60 * 60 * 1000),
       orderTracking: [{
