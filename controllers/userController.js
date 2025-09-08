@@ -24,9 +24,9 @@ const updateProfile = async (req, res, next) => {
 
     // Check if email is already taken by another user
     if (email) {
-      const existingUser = await User.findOne({ 
-        email, 
-        _id: { $ne: userId } 
+      const existingUser = await User.findOne({
+        email,
+        _id: { $ne: userId }
       });
 
       if (existingUser) {
@@ -61,9 +61,9 @@ const updateProfile = async (req, res, next) => {
     const user = await User.findByIdAndUpdate(
       userId,
       updateData,
-      { 
-        new: true, 
-        runValidators: true 
+      {
+        new: true,
+        runValidators: true
       }
     ).select('-password');
 
@@ -148,7 +148,7 @@ const removeFromFavorites = async (req, res, next) => {
     const userId = req.user.id;
 
     const user = await User.findById(userId);
-    
+
     if (!user.favorites.includes(productId)) {
       return res.status(400).json({
         success: false,
@@ -250,11 +250,30 @@ const deactivateAccount = async (req, res, next) => {
   }
 };
 
+/**
+ * Get all users
+ * GET /api/users
+ */
+const getAllUsers = async (req, res, next) => {
+  try {
+    const users = await User.find().select('-password');
+
+    res.status(200).json({
+      success: true,
+      users
+    });
+
+  } catch (error) {
+    next(error);
+  }
+};
+
 module.exports = {
   updateProfile,
   addToFavorites,
   removeFromFavorites,
   getFavorites,
   getStats,
-  deactivateAccount
+  deactivateAccount,
+  getAllUsers // Added getAllUsers
 };

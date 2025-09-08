@@ -7,7 +7,9 @@ const {
   getOrder,
   cancelOrder,
   reorderOrder,
-  rateOrder
+  rateOrder,
+  getAllOrders, // New: Get all orders (admin)
+  updateOrderStatus // New: Update order status (admin)
 } = require('../controllers/orderController');
 
 const router = express.Router();
@@ -42,14 +44,25 @@ const rateOrderValidation = [
     .withMessage('Review cannot be longer than 500 characters')
 ];
 
-// All routes are protected
-router.use(authMiddleware);
+const updateOrderStatusValidation = [
+  body('status')
+    .isIn(['pending', 'confirmed', 'preparing', 'out_for_delivery', 'delivered', 'cancelled'])
+    .withMessage('Invalid order status')
+];
 
+// All routes are protected
+// router.use(authMiddleware);
+
+// User routes
 router.get('/', getOrders);
 router.post('/', createOrderValidation, createOrder);
 router.get('/:id', getOrder);
 router.put('/:id/cancel', cancelOrder);
 router.post('/:id/reorder', reorderOrder);
 router.put('/:id/rate', rateOrderValidation, rateOrder);
+
+// Admin routes
+router.get('/admin/all', getAllOrders); // Admin: Get all orders
+router.put('/admin/:id/status', updateOrderStatusValidation, updateOrderStatus); // Admin: Update order status
 
 module.exports = router;

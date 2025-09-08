@@ -153,11 +153,15 @@ const createCategory = async (req, res, next) => {
       return res.status(400).json({ success: false, errors: errors.array() });
     }
 
-    const { name, icon, color, description, isActive, sortOrder } = req.body;
+    const { name, color, description, isActive, sortOrder } = req.body;
+    let icon = null;
+    if (req.file) {
+      icon = `${req.protocol}://${req.get('host')}/uploads/categories/${req.file.filename}`;
+    }
 
     const category = await Category.create({
       name,
-      icon,
+      icon: icon,
       color,
       description,
       isActive,
@@ -181,9 +185,87 @@ const createCategory = async (req, res, next) => {
   }
 };
 
+/**
+ * Update a category
+ * PUT /api/categories/:id
+ */
+const updateCategory = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    const { name, color, description, isActive, sortOrder } = req.body;
+
+    const category = await Category.findById(id);
+
+    if (!category) {
+      return res.status(404).json({
+        success: false,
+        message: 'Category not found'
+      });
+    }
+
+    let icon = category.icon; // Default to existing icon
+    if (req.file) {
+      icon = `${req.protocol}://${req.get('host')}/uploads/categories/${req.file.filename}`;
+    }
+
+    category.name = name || category.name;
+    category.icon = icon;
+    category.color = color || category.color;
+    category.description = description || category.description;
+    category.isActive = isActive !== undefined ? isActive : category.isActive;
+    category.sortOrder = sortOrder !== undefined ? sortOrder : category.sortOrder;
+
+    await category.save();
+
+    res.status(200).json({
+      success: true,
+      category
+    });
+
+  } catch (error) {
+    // Handle duplicate key error (e.g., category name already exists)
+    if (error.code === 11000) {
+      return res.status(400).json({
+        success: false,
+        message: 'Category with this name already exists.'
+      });
+    }
+    next(error);
+  }
+};
+
+/**
+ * Delete a category
+ * DELETE /api/categories/:id
+ */
+const deleteCategory = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+
+    const category = await Category.findByIdAndDelete(id);
+
+    if (!category) {
+      return res.status(404).json({
+        success: false,
+        message: 'Category not found'
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      message: 'Category deleted successfully'
+    });
+
+  } catch (error) {
+    next(error);
+  }
+};
+
 module.exports = {
   getCategories,
   getCategory,
   getPopularCategories,
-  createCategory
+  createCategory,
+  updateCategory,
+  deleteCategory // Added deleteCategory
 };

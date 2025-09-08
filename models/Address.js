@@ -81,7 +81,7 @@ addressSchema.index({ userId: 1, isDefault: 1 });
 addressSchema.index({ pincode: 1 });
 
 // Ensure only one default address per user
-addressSchema.pre('save', async function(next) {
+addressSchema.pre('save', async function (next) {
   try {
     if (this.isDefault) {
       await this.constructor.updateMany(
@@ -96,7 +96,7 @@ addressSchema.pre('save', async function(next) {
 });
 
 // Method to format full address
-addressSchema.methods.getFullAddress = function() {
+addressSchema.methods.getFullAddress = function () {
   let address = this.addressLine1;
   if (this.addressLine2) address += ', ' + this.addressLine2;
   if (this.landmark) address += ', Near ' + this.landmark;

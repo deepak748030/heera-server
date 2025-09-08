@@ -16,7 +16,7 @@ const categorySchema = new mongoose.Schema({
   color: {
     type: String,
     trim: true,
-    match: [/^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$/, 'Color must be a valid hex color code']
+    default: '#FFFFFF',
   },
   description: {
     type: String,

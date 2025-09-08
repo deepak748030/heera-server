@@ -8,7 +8,8 @@ const {
   removeFromFavorites,
   getFavorites,
   getStats,
-  deactivateAccount
+  deactivateAccount,
+  getAllUsers // Added getAllUsers
 } = require('../controllers/userController');
 
 const router = express.Router();
@@ -39,5 +40,8 @@ router.put('/deactivate', deactivateAccount);
 router.get('/favorites', getFavorites);
 router.post('/favorites/:productId', addToFavorites);
 router.delete('/favorites/:productId', removeFromFavorites);
+
+// Get all users route
+router.get('/', getAllUsers); // Added get all users route
 
 module.exports = router;

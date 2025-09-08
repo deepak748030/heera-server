@@ -313,7 +313,7 @@ const cancelOrder = async (req, res, next) => {
     for (const item of order.items) {
       await Product.findByIdAndUpdate(item.productId, {
         $inc: {
-          stockCount: item.quantity,
+          stockCount: -item.quantity,
           totalSold: -item.quantity
         }
       });
@@ -572,11 +572,96 @@ const rateOrder = async (req, res, next) => {
   }
 };
 
+/**
+ * Get all orders (Admin)
+ * GET /api/orders/admin/all
+ */
+const getAllOrders = async (req, res, next) => {
+  try {
+    const { status, limit = 10, page = 1 } = req.query;
+
+    const filter = {};
+
+    if (status) {
+      filter.status = status;
+    }
+
+    const orders = await Order.find(filter)
+      .sort({ createdAt: -1 })
+      .select('-__v')
+      .populate('userId', 'name email'); // Populate user details
+
+    const total = await Order.countDocuments(filter);
+
+    res.status(200).json({
+      success: true,
+      count: orders.length,
+      total,
+      orders
+    });
+
+  } catch (error) {
+    next(error);
+  }
+};
+
+/**
+ * Update order status (Admin)
+ * PUT /api/orders/admin/:id/status
+ */
+const updateOrderStatus = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    const { status } = req.body;
+
+    const order = await Order.findById(id);
+
+    if (!order) {
+      return res.status(404).json({
+        success: false,
+        message: 'Order not found'
+      });
+    }
+
+    order.status = status;
+
+    // Add tracking step
+    order.orderTracking.push({
+      status: `Order Status Updated to ${status}`,
+      time: new Date(),
+      description: `Order status has been updated to ${status} by admin`,
+      completed: true
+    });
+
+    await order.save();
+
+    // Create notification
+    await Notification.create({
+      userId: order.userId,
+      type: 'order',
+      title: 'Order Status Updated',
+      message: `Your order ${order.orderNumber} status has been updated to ${status} by admin.`,
+      data: { orderId: order._id, orderNumber: order.orderNumber, status }
+    });
+
+    res.status(200).json({
+      success: true,
+      message: 'Order status updated successfully',
+      order
+    });
+
+  } catch (error) {
+    next(error);
+  }
+};
+
 module.exports = {
   createOrder,
   getOrders,
   getOrder,
   cancelOrder,
   reorderOrder,
-  rateOrder
+  rateOrder,
+  getAllOrders, // New: Get all orders (admin)
+  updateOrderStatus // New: Update order status (admin)
 };

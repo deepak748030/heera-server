@@ -23,18 +23,18 @@ const createSubDir = (subDir) => {
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
     let uploadPath = 'others';
-    
+
     // Determine upload path based on fieldname or route
     if (file.fieldname === 'avatar' || req.route.path.includes('avatar')) {
       uploadPath = 'avatars';
     } else if (file.fieldname === 'productImages' || req.route.path.includes('product')) {
       uploadPath = 'products';
-    } else if (file.fieldname === 'categoryIcon' || req.route.path.includes('category')) {
+    } else if (file.fieldname === 'categoryImg' || req.route.path.includes('category')) {
       uploadPath = 'categories';
     } else if (file.fieldname === 'storeImage' || req.route.path.includes('store')) {
       uploadPath = 'stores';
     }
-    
+
     const fullPath = createSubDir(uploadPath);
     cb(null, fullPath);
   },

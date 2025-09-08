@@ -2,7 +2,6 @@ const Product = require('../models/Product');
 const Category = require('../models/Category');
 const { validationResult } = require('express-validator');
 
-
 /**
  * Create new product
  * POST /api/products
@@ -66,7 +65,6 @@ const createProduct = async (req, res, next) => {
     next(error);
   }
 };
-
 
 /**
  * Get all products with filtering and pagination
@@ -150,7 +148,6 @@ const getProducts = async (req, res, next) => {
     const limitNum = Math.min(parseInt(limit, 10), 100); // Max 100 items per page
     const skip = (pageNum - 1) * limitNum;
 
-    // Execute query
     const products = await Product.find(filter)
       .populate('category', 'name icon color')
       // .populate('store', 'name location verified rating')
@@ -174,6 +171,29 @@ const getProducts = async (req, res, next) => {
       products
     });
 
+  } catch (error) {
+    next(error);
+  }
+};
+
+/**
+ * Get all products without pagination
+ * GET /api/products/all
+ */
+const getAllProducts = async (req, res, next) => {
+  try {
+    const filter = { isActive: true };
+    const products = await Product.find(filter)
+      .populate('category', 'name icon color')
+      // .populate('store', 'name location verified rating')
+      .select('-__v')
+      .sort({ createdAt: 'desc' });
+
+    res.status(200).json({
+      success: true,
+      count: products.length,
+      products
+    });
   } catch (error) {
     next(error);
   }
@@ -356,26 +376,22 @@ const searchProducts = async (req, res, next) => {
 
     const searchRegex = new RegExp(query.trim(), 'i');
 
-    const products = await Product.find({
+    const filter = {
       isActive: true,
       $or: [
         { name: searchRegex },
         { description: searchRegex }
       ]
-    })
+    };
+
+    const products = await Product.find(filter)
       .populate('category', 'name icon color')
       // .populate('store', 'name location verified')
       .sort({ rating: -1, totalSold: -1 })
       .skip(skip)
       .limit(limitNum);
 
-    const total = await Product.countDocuments({
-      isActive: true,
-      $or: [
-        { name: searchRegex },
-        { description: searchRegex }
-      ]
-    });
+    const total = await Product.countDocuments(filter);
 
     res.status(200).json({
       success: true,
@@ -390,6 +406,78 @@ const searchProducts = async (req, res, next) => {
   }
 };
 
+/**
+ * Update product
+ * PUT /api/products/:id
+ */
+const updateProduct = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    const updates = req.body;
+
+    // Validate required fields
+    if (!updates.name || !updates.price || !updates.category) {
+      return res.status(400).json({
+        success: false,
+        message: 'Name, price, and category are required'
+      });
+    }
+
+    // Handle images (uploaded via multer)
+    let images = [];
+    if (req.files && req.files.length > 0) {
+      images = req.files.map(file => `/uploads/products/${file.filename}`);
+      updates.images = images; // Add images to updates object
+    }
+
+    const product = await Product.findByIdAndUpdate(id, updates, {
+      new: true,
+      runValidators: true
+    });
+
+    if (!product) {
+      return res.status(404).json({
+        success: false,
+        message: 'Product not found'
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      message: 'Product updated successfully',
+      product
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+/**
+ * Delete product
+ * DELETE /api/products/:id
+ */
+const deleteProduct = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+
+    const product = await Product.findByIdAndDelete(id);
+
+    if (!product) {
+      return res.status(404).json({
+        success: false,
+        message: 'Product not found'
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      message: 'Product deleted successfully'
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
 module.exports = {
   getProducts,
   getProduct,
@@ -397,6 +485,8 @@ module.exports = {
   getFlashSaleProducts,
   getProductsByCategory,
   searchProducts,
-  createProduct
+  createProduct,
+  getAllProducts,
+  updateProduct,
+  deleteProduct
 };
-

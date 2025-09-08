@@ -4,8 +4,8 @@ const config = require('../config');
 
 const authMiddleware = async (req, res, next) => {
   try {
+    // next();
     let token;
-
     // Check for token in different places
     if (req.headers.authorization && req.headers.authorization.startsWith('Bearer')) {
       token = req.headers.authorization.split(' ')[1];
@@ -23,10 +23,10 @@ const authMiddleware = async (req, res, next) => {
     try {
       // Verify token
       const decoded = jwt.verify(token, config.JWT_SECRET);
-      
+
       // Get user from token
       const user = await User.findById(decoded.id).select('-password');
-      
+
       if (!user) {
         return res.status(401).json({
           success: false,
