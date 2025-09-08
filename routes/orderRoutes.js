@@ -51,7 +51,7 @@ const updateOrderStatusValidation = [
 ];
 
 // All routes are protected
-// router.use(authMiddleware);
+router.use(authMiddleware);
 
 // User routes
 router.get('/', getOrders);
